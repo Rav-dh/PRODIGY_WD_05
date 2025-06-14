@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo animate-fade-in">
+            <h1>Weather App</h1>
+        </div>
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item animate-slide-in"><a href="#">Home</a></li>
+            <li class="nav-item animate-slide-in" style="animation-delay: 0.1s;"><a href="#">About Us</a></li>
+            <li class="nav-item previous-searches animate-slide-in" style="animation-delay: 0.2s;">
+                <a href="#">Previous Searches</a>
+                <ul class="dropdown">
+                    <li class="dropdown-item"><a href="#">Mumbai</a></li>
+                    <li class="dropdown-item"><a href="#">Delhi</a></li>
+                    <li class="dropdown-item"><a href="#">Ahmedabad</a></li>
+                </ul>
+            </li>
+        </ul>
+        <form class="search-form animate-fade-in" style="animation-delay: 0.3s;">
+            <input type="search" placeholder="Search city..." id="search-input">
+            <button type="submit" id="search-btn">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+        </form>
+    </nav>
+
+    <!-- Main Body -->
+    <main class="weather-container">
+        <div class="weather-info animate-scale-in">
+            <h2>Weather for <span id="cityName">Morbi</span></h2>
+            <div class="weather-details">
+                <div class="weather-main">
+                    <div class="temperature-wrapper">
+                        <span id="temperature">Loading...</span>
+                        <span id="weatherIcon"></span>
+                    </div>
+                    <div class="condition-wrapper">
+                        <span id="weatherCondition">Loading...</span>
+                    </div>
+                </div>
+                <div class="additional-info">
+                    <p>Feels Like: <span id="feelsLike">Loading...</span> °C</p>
+                    <p>Humidity: <span id="humidity">Loading...</span>%</p>
+                    <p>Wind Speed: <span id="windSpeed">Loading...</span> km/h</p>
+                    <p>UV Index: <span id="uvIndex">Loading...</span></p>
+                    <p>Visibility: <span id="visibility">Loading...</span> km</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="chart-container animate-fade-in">
+            <canvas id="weather-chart"></canvas>
+        </div>
+        <div class="forecast animate-fade-in">
+            <h3>7-Day Forecast</h3>
+            <div id="forecastContainer" class="forecast-days">
+                <!-- Forecast data will be populated by JS -->
+            </div>
+        </div>
+    </footer>
+
+    <div id="loadingSpinner" class="loading-spinner">Loading...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
