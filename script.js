@@ -131,47 +131,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function generateSevenDayForecast(currentWeather, forecast) {
-        const today = new Date('2025-06-14'); // Fixed date as per system prompt
+        const today = new Date(); // Dynamically get the current date
         const sevenDays = [];
         
-        // Simulate previous 3 days by adjusting today's temperature
-        for (let i = -3; i < 0; i++) {
+        // Generate 3 previous days, today, and 3 next days
+        for (let i = -3; i <= 3; i++) {
             const date = new Date(today);
             date.setDate(today.getDate() + i);
-            const temp = Math.round(currentWeather.current.temp_c + (i * 1.5));
-            sevenDays.push({
-                date: date,
-                condition: currentWeather.current.condition.text,
-                maxtemp_c: temp,
-                mintemp_c: temp - 5,
-                daily_chance_of_rain: currentWeather.current.humidity,
-                maxwind_kph: currentWeather.current.wind_kph
-            });
+            
+            if (i < 0) {
+                // Simulate previous days by adjusting temperature
+                const temp = Math.round(currentWeather.current.temp_c + (i * 1.5));
+                sevenDays.push({
+                    date: date,
+                    condition: currentWeather.current.condition.text,
+                    maxtemp_c: temp,
+                    mintemp_c: temp - 5,
+                    daily_chance_of_rain: currentWeather.current.humidity,
+                    maxwind_kph: currentWeather.current.wind_kph
+                });
+            } else if (i === 0) {
+                // Today: Use current weather data
+                sevenDays.push({
+                    date: date,
+                    condition: currentWeather.current.condition.text,
+                    maxtemp_c: currentWeather.current.temp_c,
+                    mintemp_c: currentWeather.current.temp_c - 5,
+                    daily_chance_of_rain: currentWeather.current.humidity,
+                    maxwind_kph: currentWeather.current.wind_kph
+                });
+            } else {
+                // Next days: Use forecast data
+                const forecastDay = forecast.forecast.forecastday[i - 1];
+                if (forecastDay) {
+                    sevenDays.push({
+                        date: date,
+                        condition: forecastDay.day.condition.text,
+                        maxtemp_c: forecastDay.day.maxtemp_c,
+                        mintemp_c: forecastDay.day.mintemp_c,
+                        daily_chance_of_rain: forecastDay.day.daily_chance_of_rain,
+                        maxwind_kph: forecastDay.day.maxwind_kph
+                    });
+                } else {
+                    // Fallback for missing forecast data
+                    const temp = Math.round(currentWeather.current.temp_c + (i * 1.5));
+                    sevenDays.push({
+                        date: date,
+                        condition: currentWeather.current.condition.text,
+                        maxtemp_c: temp,
+                        mintemp_c: temp - 5,
+                        daily_chance_of_rain: currentWeather.current.humidity,
+                        maxwind_kph: currentWeather.current.wind_kph
+                    });
+                }
+            }
         }
-
-        // Today
-        sevenDays.push({
-            date: today,
-            condition: currentWeather.current.condition.text,
-            maxtemp_c: currentWeather.current.temp_c,
-            mintemp_c: currentWeather.current.temp_c - 5,
-            daily_chance_of_rain: currentWeather.current.humidity,
-            maxwind_kph: currentWeather.current.wind_kph
-        });
-
-        // Next 3 days from forecast
-        forecast.forecast.forecastday.forEach(day => {
-            const date = new Date(today);
-            date.setDate(today.getDate() + (sevenDays.length - 3));
-            sevenDays.push({
-                date: date,
-                condition: day.day.condition.text,
-                maxtemp_c: day.day.maxtemp_c,
-                mintemp_c: day.day.mintemp_c,
-                daily_chance_of_rain: day.day.daily_chance_of_rain,
-                maxwind_kph: day.day.maxwind_kph
-            });
-        });
 
         return sevenDays;
     }
@@ -190,11 +204,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateForecast(data) {
         forecastContainer.innerHTML = '';
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize today's date to midnight for comparison
+
         data.forEach((day, index) => {
             const dateStr = day.date.toLocaleDateString('en-US', { weekday: 'long' });
             const condition = day.condition;
             const row = document.createElement('div');
             row.className = 'table-row';
+
+            // Normalize forecast date for comparison
+            const forecastDate = new Date(day.date);
+            forecastDate.setHours(0, 0, 0, 0);
+
+            // Highlight if the date matches today
+            if (forecastDate.getTime() === today.getTime()) {
+                row.classList.add('highlighted');
+            }
+
             row.innerHTML = `
                 <div>${dateStr}</div>
                 <div>${condition} ${getWeatherIcon(condition)}</div>
@@ -216,6 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const labels = data.map(day => day.date.toLocaleDateString('en-US', { weekday: 'short' }));
         const temperatures = data.map(day => day.maxtemp_c);
 
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize today's date for comparison
+
         if (chartInstance) {
             chartInstance.destroy();
         }
@@ -227,13 +257,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 datasets: [{
                     label: 'Temperature (°C)',
                     data: temperatures,
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
                     fill: false,
                     tension: 0.4,
-                    pointBackgroundColor: labels.map((_, index) => index === 3 ? '#ffd700' : '#fff'),
-                    pointBorderColor: labels.map((_, index) => index === 3 ? '#ffd700' : '#fff'),
-                    pointRadius: labels.map((_, index) => index === 3 ? 6 : 4),
+                    pointBackgroundColor: data.map(day => {
+                        const dayDate = new Date(day.date);
+                        dayDate.setHours(0, 0, 0, 0);
+                        return dayDate.getTime() === today.getTime() ? '#ffd700' : '#e0e0e0';
+                    }),
+                    pointBorderColor: data.map(day => {
+                        const dayDate = new Date(day.date);
+                        dayDate.setHours(0, 0, 0, 0);
+                        return dayDate.getTime() === today.getTime() ? '#ffd700' : '#e0e0e0';
+                    }),
+                    pointRadius: data.map(day => {
+                        const dayDate = new Date(day.date);
+                        dayDate.setHours(0, 0, 0, 0);
+                        return dayDate.getTime() === today.getTime() ? 6 : 4;
+                    }),
                 }]
             },
             options: {
@@ -246,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     y: {
                         beginAtZero: false,
                         ticks: { 
-                            color: '#fff',
+                            color: '#e0e0e0',
                             display: false
                         },
                         grid: { 
@@ -256,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     x: {
                         ticks: { 
-                            color: '#fff',
+                            color: '#e0e0e0',
                             font: { size: 14 }
                         },
                         grid: { 
@@ -270,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     tooltip: { enabled: false },
                     datalabels: {
                         display: true,
-                        color: '#fff',
+                        color: '#e0e0e0',
                         formatter: (value) => `${value}°`,
                         anchor: 'end',
                         align: 'top',
